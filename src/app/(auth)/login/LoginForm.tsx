@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,7 +37,7 @@ export default function LoginForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
-      password: ""
+      password: "",
     },
   });
 
@@ -47,12 +47,10 @@ export default function LoginForm() {
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <Card className="w-[450px] rounded-xl border border-black/20 shadow-xl p-6 bg-white/90 backdrop-blur-lg transition-all duration-300 hover:shadow-xl">
-        <CardTitle>
-          <div className="flex justify-center items-center gap-1.5">
-            <HeartHandshake size={35} className="text-pink-500" />
-            <span className="text-3xl font-extrabold text-gray-800">Login</span>
-          </div>
+      <Card className="w-[450px] shadow-2xl p-4">
+        <CardTitle className="text-3xl font-bold text-center flex items-center justify-center gap-2 text-pink-600">
+          <HeartHandshake className="h-8 w-8 text-pink-500" />
+          MatchMe
         </CardTitle>
         <CardDescription>
           <span className="text-lg text-center flex justify-center items-center font-serif text-gray-600 my-2">
@@ -61,7 +59,7 @@ export default function LoginForm() {
         </CardDescription>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="username"
@@ -92,11 +90,16 @@ export default function LoginForm() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="text-center text-gray-600">
-          Don't have an account?{" "}
-          <Link href="/register" className="ml-1 text-blue-500 underline">
-            Register
-          </Link>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-muted-foreground">
+            Dont&apos;t have an account?{" "}
+            <Link
+              href="/register"
+              className="text-pink-600 hover:underline transition-all duration-300 ease-in-out"
+            >
+              Register
+            </Link>
+          </p>
         </CardFooter>
       </Card>
     </div>
