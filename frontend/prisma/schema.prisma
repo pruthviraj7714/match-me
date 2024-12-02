@@ -21,6 +21,19 @@ model User {
   interests      String[]
   gender         Gender
   photos         Photo[]
+  likesGiven     Like[]    @relation("LikesGiven")
+  likesReceived  Like[]    @relation("LikesReceived")
+}
+
+model Like {
+  id  String @id @default(uuid())
+  likerId   String
+  likedToId   String
+  liker          User   @relation("LikesGiven", fields: [likerId], references: [id])
+  likedTo        User   @relation("LikesReceived", fields: [likedToId], references: [id])
+  createdAt      DateTime @default(now())
+
+  @@unique([likerId, likedToId])
 }
 
 model Photo {
