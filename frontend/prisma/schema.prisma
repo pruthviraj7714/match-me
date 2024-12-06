@@ -8,13 +8,13 @@ datasource db {
 }
 
 model User {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   name           String
-  username       String   @unique
+  username       String    @unique
   password       String
   profilePicture String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now())
   bio            String
   dateOfBirth    String
   country        String
@@ -23,15 +23,18 @@ model User {
   photos         Photo[]
   likesGiven     Like[]    @relation("LikesGiven")
   likesReceived  Like[]    @relation("LikesReceived")
+  chatsAsUser1   Chat[]    @relation("ChatsAsUser1")
+  chatsAsUser2   Chat[]    @relation("ChatsAsUser2")
+  Message        Message[]
 }
 
 model Like {
-  id  String @id @default(uuid())
+  id        String   @id @default(uuid())
   likerId   String
-  likedToId   String
-  liker          User   @relation("LikesGiven", fields: [likerId], references: [id])
-  likedTo        User   @relation("LikesReceived", fields: [likedToId], references: [id])
-  createdAt      DateTime @default(now())
+  likedToId String
+  liker     User     @relation("LikesGiven", fields: [likerId], references: [id])
+  likedTo   User     @relation("LikesReceived", fields: [likedToId], references: [id])
+  createdAt DateTime @default(now())
 
   @@unique([likerId, likedToId])
 }
@@ -42,6 +45,31 @@ model Photo {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Chat {
+  id       String    @id @default(cuid())
+  user1Id  String
+  user2Id  String
+  messages Message[]
+
+  user1 User @relation("ChatsAsUser1", fields: [user1Id], references: [id])
+  user2 User @relation("ChatsAsUser2", fields: [user2Id], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  content     String
+  deliveredAt DateTime
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  chat   Chat   @relation(fields: [chatId], references: [id])
+  sender User   @relation(fields: [senderId], references: [id])
+  chatId String
 }
 
 enum Gender {

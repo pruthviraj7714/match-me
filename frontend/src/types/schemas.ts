@@ -6,7 +6,7 @@ export const RegisterSchema = z
     username: z
       .string()
       .min(2, { message: "Username must be at least 2 characters" }),
-    dateOfBirth: z.string({message : "Date of Birth is required"}),
+    dateOfBirth: z.string({ message: "Date of Birth is required" }),
     image: z.string(),
     password: z
       .string()
@@ -23,3 +23,9 @@ export const RegisterSchema = z
     message: "Passwords must match",
     path: ["confirmPassword"],
   });
+
+export const MemberEditSchema = z.object({
+  name: z.string().min(3, { message: "Name must be at least 3 characters" }),
+  bio: z.string(),
+  country: z.string().min(1, {message : "Country is required"}),
+});

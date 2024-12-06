@@ -1,34 +1,11 @@
 import { fetchUserInfo } from "@/actions/actions";
+import ChatButton from "@/components/ChatButton";
 import LikeButton from "@/components/LikeButton";
-import { Button } from "@/components/ui/button";
 import { authOptions } from "@/lib/auth";
-import { CalendarDays, MapPin, MessageCircleHeartIcon } from "lucide-react";
+import { LikeProps } from "@/types/user.types";
+import { CalendarDays, MapPin } from "lucide-react";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
-
-interface LikeProps {
-  id: string;
-  likerId: string;
-  likedToId: string;
-  createdAt: Date;
-}
-
-export interface UserProps {
-  id: string;
-  name: string;
-  username: string;
-  password: string;
-  profilePicture: string;
-  createdAt: Date;
-  updatedAt: Date;
-  bio: string;
-  dateOfBirth: string;
-  country: string;
-  interests: string[];
-  gender: "MALE" | "FEMALE";
-  likesGiven: LikeProps[];
-  likesReceived: LikeProps[];
-}
 
 export default async function Page({
   params,
@@ -90,10 +67,7 @@ export default async function Page({
               (u: LikeProps) => u.likerId === session?.user.id
             )}
           />
-          <Button className="flex items-center gap-1.5 !bg-green-500 hover:!bg-green-600">
-            <MessageCircleHeartIcon size={35} />
-            <span className="font-bold text-lg">Chat</span>
-          </Button>
+         <ChatButton recieverId={userId} />
         </div>
       </div>
     </div>
