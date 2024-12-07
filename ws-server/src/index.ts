@@ -8,6 +8,15 @@ const users = new Map<string, User>();
 wss.on("connection", (socket: WebSocket) => {
   let currentUser: User | null = null;
 
+  const onlineUsers = [...users].filter(([id, user]) => user.isOnline);
+
+  socket.send(
+    JSON.stringify({
+      type: "ONLINE_USERS",
+      users: onlineUsers,
+    })
+  );
+
   socket.on("message", (data) => {
     const msg = JSON.parse(data.toString());
 
@@ -47,32 +56,22 @@ wss.on("connection", (socket: WebSocket) => {
         }
         break;
       }
-
-      case "FETCH_ONLINE_USERS": {
-        const onlineUsers = [...users].filter(([id, user]) => user.isOnline);
-
-        socket.send(
-          JSON.stringify({
-            type: "ONLINE_USERS",
-            users: onlineUsers,
-          })
-        );
-        break;
-      }
     }
   });
 
   socket.on("close", () => {
     if (currentUser) {
       currentUser.handleDisconnect();
-      
+
       users.forEach((user, id) => {
         if (id !== currentUser?.userId) {
-          user.handleOnlineStatus({ userId: currentUser?.userId, status: "offline" });
+          user.handleOnlineStatus({
+            userId: currentUser?.userId,
+            status: "offline",
+          });
         }
       });
-      users.delete(currentUser.userId); 
-
+      users.delete(currentUser.userId);
 
       console.log(`User ${currentUser.userId} disconnected`);
     }
