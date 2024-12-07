@@ -1,110 +1,120 @@
-// "use client";
+"use client";
 
-// import React, { useEffect, useState } from "react";
-// import Image from "next/image";
-// import { Input } from "@/components/ui/input";
-// import { Button } from "@/components/ui/button";
-// import { ScrollArea } from "@/components/ui/scroll-area";
-// import { fetchChats } from "@/actions/chatActions";
-// import { toast } from "sonner";
-// import ConversationCard from "@/components/ConversationCard";
+import { toast } from "sonner";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { MessageSquare, Search, Plus } from "lucide-react";
+import ConversationCard from "@/components/ConversationCard";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
+import { ChatProps } from "@/types/chat.types";
 
+export default function MessagesPage() {
+  const [conversations, setConversations] = useState<ChatProps[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const router = useRouter();
+  const session = useSession();
 
-// export default function MessagesPage() {
-//   const [conversations, setConversations] = useState([]);
-//   const [selectedConversation, setSelectedConversation] = useState(null);
-//   const [messages, setMessages] = useState([]);
-//   const [newMessage, setNewMessage] = useState("");
+  const fetchAllChats = async () => {
+    try {
+      setIsLoading(true);
+      const res = await axios.get("/api/chat/all");
+      setConversations(res.data.chats);
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-//   const fetchAllConversations = async () => {
-//     try {
-//       const chats = await fetchChats();
-//       setConversations(chats);
-//       if (chats.length > 0) setSelectedConversation(chats[0]);
-//     } catch (error: any) {
-//       toast.error(error.message);
-//     }
-//   };
+  useEffect(() => {
+    fetchAllChats();
+  }, []);
 
-//   const handleSendMessage = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (newMessage.trim()) {
-//       console.log("Sending message:", newMessage);
-//       setNewMessage("");
-//     }
-//   };
+  const filteredConversations = conversations.filter(
+    (conversation) =>
+      conversation.user1.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      conversation.user2.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-//   useEffect(() => {
-//     fetchAllConversations();
-//   }, []);
-
-//   if (!selectedConversation) {
-//     return <p>Loading chats...</p>;
-//   }
-
-//   return (
-//     <div className="flex h-screen bg-gray-100">
-//       <div className="w-1/3 bg-white border-r border-gray-200">
-//         <h2 className="text-xl font-semibold p-4 border-b">Messages</h2>
-//         <ScrollArea className="h-[calc(100vh-5rem)]">
-//           {conversations.map((conversation) => (
-//            <ConversationCard conversation={conversation} key={conversation.id} />
-//           ))}
-//         </ScrollArea>
-//       </div>
-
-//       <div className="flex-1 flex flex-col">
-//         <div className="bg-white p-4 border-b border-gray-200 flex items-center">
-//           <Image
-//             src={selectedConversation.avatar}
-//             alt={selectedConversation.name}
-//             width={40}
-//             height={40}
-//             className="rounded-full mr-3"
-//           />
-//           <h2 className="text-xl font-semibold">{selectedConversation.name}</h2>
-//         </div>
-
-//         <ScrollArea className="flex-1 p-4">
-//           {messages.map((message) => (
-//             <div
-//               key={message.id}
-//               className={`mb-4 ${
-//                 message.senderId === session.user.id ? "text-right" : ""
-//               }`}
-//             >
-//               <div
-//                 className={`inline-block p-2 rounded-lg ${
-//                   message.senderId === session.user.id
-//                     ? "bg-blue-500 text-white"
-//                     : "bg-gray-200"
-//                 }`}
-//               >
-//                 {message.text}
-//               </div>
-//               <div className="text-xs text-gray-500 mt-1">
-//                 {new Date(message.timestamp).toLocaleTimeString()}
-//               </div>
-//             </div>
-//           ))}
-//         </ScrollArea>
-
-//         <form
-//           onSubmit={handleSendMessage}
-//           className="bg-white p-4 border-t border-gray-200"
-//         >
-//           <div className="flex">
-//             <Input
-//               type="text"
-//               placeholder="Type a message..."
-//               value={newMessage}
-//               onChange={(e) => setNewMessage(e.target.value)}
-//               className="flex-1 mr-2"
-//             />
-//             <Button type="submit">Send</Button>
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <div className="w-full md:w-1/3 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-2xl font-bold mb-4 text-primary">Messages</h2>
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="p-4 border-b border-gray-200">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="space-y-2 mt-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
+            ))
+          ) : filteredConversations.length > 0 ? (
+            filteredConversations.map((conversation: ChatProps) => (
+              <ConversationCard
+                conversation={conversation}
+                key={conversation.id}
+                recipientUser={
+                  conversation.user1.id !== session.data?.user.id
+                    ? conversation.user1.id
+                    : conversation.user2.id
+                }
+              />
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+              <MessageSquare size={48} />
+              <p className="mt-2">No conversations found</p>
+            </div>
+          )}
+        </div>
+        <div className="p-4 border-t border-gray-200">
+          <Button
+            onClick={() => {
+              router.push("/members");
+            }}
+            className="w-full"
+          >
+            <Plus size={18} className="mr-2" />
+            New Conversation
+          </Button>
+        </div>
+      </div>
+      <div className="hidden md:flex md:flex-1 items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <MessageSquare size={64} className="mx-auto text-gray-400" />
+          <h3 className="mt-4 text-xl font-semibold text-gray-700">
+            Select a conversation
+          </h3>
+          <p className="mt-2 text-gray-500">
+            Choose a conversation from the list to start chatting
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

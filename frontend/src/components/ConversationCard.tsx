@@ -1,33 +1,76 @@
+import { formatDistanceToNow, parseISO } from "date-fns";
 import Image from "next/image";
+import Link from "next/link";
+import { MessageCircle } from "lucide-react";
+import { ChatProps, MessageProps } from "@/types/chat.types";
 
-const ConversationCard = ({conversation} : {conversation : any}) => {
+
+const ConversationCard = ({
+  conversation,
+  recipientUser,
+}: {
+  conversation: ChatProps;
+  recipientUser: string;
+}) => {
+  const recipientInfo =
+    conversation.user1.id === recipientUser
+      ? conversation.user1
+      : conversation.user2;
+
+  const lastMessage = conversation?.messages[conversation.messages.length - 1];
+
+  const unreadMessages = conversation.messages.filter(
+    (message : MessageProps) => message.isRead === false
+  );
+
   return (
-    <div
+    <Link
+      href={`/chat/${conversation.id}`}
       key={conversation.id}
-      className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 ${
-        selectedConversation.id === conversation.id ? "bg-gray-100" : ""
-      }`}
-      onClick={() => setSelectedConversation(conversation)}
+      className="block"
     >
-      <Image
-        src={conversation.avatar}
-        alt={conversation.name}
-        width={40}
-        height={40}
-        className="rounded-full mr-3"
-      />
-      <div className="flex-1">
-        <h3 className="font-semibold">{conversation.name}</h3>
-        <p className="text-sm text-gray-500 truncate">
-          {conversation.lastMessage}
-        </p>
+      <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4 mb-4">
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <Image
+              src={recipientInfo.profilePicture}
+              alt={recipientInfo.name}
+              width={56}
+              height={56}
+              className="rounded-full border-2 border-primary"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-gray-900 truncate">
+              {recipientInfo.name}
+            </h3>
+            <p className="text-sm text-gray-500 truncate">
+              {lastMessage?.content || "Start Conversation 💝"}
+            </p>
+          </div>
+          <div className="flex flex-col items-end space-y-1">
+            <span className="text-xs text-gray-400">
+              {lastMessage?.createdAt
+                ? formatDistanceToNow(parseISO(lastMessage.createdAt), {
+                    addSuffix: true,
+                  })
+                : "No messages yet"}
+            </span>
+            {!lastMessage ? (
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-primary rounded-full">
+                <MessageCircle size={14} className="text-white" />
+              </span>
+            ) : (
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-primary rounded-full">
+                <span className="text-white font-mono text-sm">
+                  {unreadMessages?.length}
+                </span>
+              </span>
+            )}
+          </div>
+        </div>
       </div>
-      {conversation.unread > 0 && (
-        <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-          {conversation.unread}
-        </span>
-      )}
-    </div>
+    </Link>
   );
 };
 
