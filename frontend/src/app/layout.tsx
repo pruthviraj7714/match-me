@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import TopNav from "@/components/navbar/TopNav";
 import { Toaster } from "sonner";
+import Footer from "@/components/Footer";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,6 +36,7 @@ export default function RootLayout({
           <Toaster />
           <TopNav />
           {children}
+          <Footer />
         </Providers>
       </body>
     </html>

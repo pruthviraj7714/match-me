@@ -1,48 +1,55 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import axios from "axios"
-import { toast } from "sonner"
-import { UserProps } from "@/types/user.types"
-import MemberCard from "@/components/MemberCard"
-import { Loader2, Users } from 'lucide-react'
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { toast } from "sonner";
+import { UserProps } from "@/types/user.types";
+import MemberCard from "@/components/MemberCard";
+import { LucideLoader2, Users } from "lucide-react";
 
 export default function MembersPage() {
-  const [members, setMembers] = useState<UserProps[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [members, setMembers] = useState<UserProps[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchMembers = async () => {
     try {
-      setIsLoading(true)
-      setError(null)
-      const res = await axios.get("/api/members/all")
-      setMembers(res.data.members)
+      setIsLoading(true);
+      setError(null);
+      const res = await axios.get("/api/members/all");
+      setMembers(res.data.members);
     } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to fetch members")
-      toast.error(error.response?.data?.message || "Failed to fetch members")
+      setError(error.response?.data?.message || "Failed to fetch members");
+      toast.error(error.response?.data?.message || "Failed to fetch members");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchMembers()
-  }, [])
+    fetchMembers();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <LucideLoader2 className="animate-spin text-pink-400 size-14" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="mb-8 text-center">
-        <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-gray-100">Our Members</h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">Meet the amazing individuals in our community</p>
+        <h1 className="mb-2 text-4xl font-bold text-gray-900 dark:text-gray-100">
+          Our Members
+        </h1>
+        <p className="text-lg text-gray-600 dark:text-gray-400">
+          Meet the amazing individuals in our community
+        </p>
       </header>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center">
-          <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-          <span>Loading members...</span>
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="rounded-lg bg-red-100 p-4 text-center text-red-700">
           <p>{error}</p>
           <button
@@ -65,5 +72,5 @@ export default function MembersPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

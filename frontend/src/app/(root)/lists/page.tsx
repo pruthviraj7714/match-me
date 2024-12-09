@@ -8,7 +8,7 @@ export default async function ListPage() {
   const likedToMeUsers = await fetchUsersLikedMe();
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container min-h-screen mx-auto py-8 px-4">
       <Tabs defaultValue="likedByMe" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="likedByMe" className="text-lg">
