@@ -8,12 +8,16 @@ import { redirect } from "next/navigation";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
+  let user;
 
   if (!session || !session.user) {
     redirect("/");
   }
 
-  const user = await fetchUserInfo(session.user.id);
+  if(session.user) {
+    user = await fetchUserInfo(session.user.id);
+  }
+
   return (
     <div className="bg-gradient-to-b from-pink-100 to-white min-h-screen flex flex-col items-center py-12">
       <section className="container mx-auto mt-8 text-center relative">
@@ -43,7 +47,7 @@ export default async function Home() {
         <div className="bg-white shadow-lg rounded-xl p-6 text-center transform transition duration-500 hover:scale-105">
           <div className="mb-4 flex justify-center">
             <Image
-              src={user.profilePicture}
+              src={user?.profilePicture}
               alt="Profile icon"
               width={100}
               height={100}
@@ -105,7 +109,7 @@ export default async function Home() {
             search features.
           </p>
           <Link
-            href="/discover"
+            href="/members"
             className="mt-4 inline-flex items-center justify-center bg-pink-600 text-white py-2 px-6 rounded-full hover:bg-pink-700 transition duration-300"
           >
             <Search className="mr-2 h-5 w-5" />
