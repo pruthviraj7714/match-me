@@ -52,7 +52,7 @@ export default async function Page({
               {user.interests.map((interest: string) => (
                 <span
                   key={interest}
-                  className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm"
+                  className="px-3 py-1 bg-pink-600 text-white rounded-full text-sm"
                 >
                   {interest}
                 </span>

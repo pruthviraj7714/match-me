@@ -1,8 +1,19 @@
-import Image from 'next/image'
-import Link from 'next/link'
-import { Heart, MessageCircle, Search } from 'lucide-react'
+import Image from "next/image";
+import Link from "next/link";
+import { Heart, MessageCircle, Search } from "lucide-react";
+import { fetchUserInfo } from "@/actions/actions";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user) {
+    redirect("/");
+  }
+
+  const user = await fetchUserInfo(session.user.id);
   return (
     <div className="bg-gradient-to-b from-pink-100 to-white min-h-screen flex flex-col items-center py-12">
       <section className="container mx-auto mt-8 text-center relative">
@@ -20,7 +31,9 @@ export default function Home() {
           height={200}
           className="absolute top-0 right-0 opacity-20"
         />
-        <h1 className="text-4xl font-bold text-pink-600">Welcome Back to MatchMe!</h1>
+        <h1 className="text-4xl font-bold text-pink-600">
+          Welcome to MatchMe!
+        </h1>
         <p className="text-gray-600 mt-4 text-xl">
           Ready to connect with amazing people? Let's get started!
         </p>
@@ -30,16 +43,19 @@ export default function Home() {
         <div className="bg-white shadow-lg rounded-xl p-6 text-center transform transition duration-500 hover:scale-105">
           <div className="mb-4 flex justify-center">
             <Image
-              src="https://i.pinimg.com/736x/4c/e5/af/4ce5af73dcfd1084ccbf84d8bc4c6255.jpg"
+              src={user.profilePicture}
               alt="Profile icon"
               width={100}
               height={100}
               className="rounded-full"
             />
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-pink-600">Your Profile</h2>
+          <h2 className="text-2xl font-bold mb-4 text-pink-600">
+            Your Profile
+          </h2>
           <p className="text-gray-600 mb-6">
-            Update your details, pictures, and preferences to find your perfect match.
+            Update your details, pictures, and preferences to find your perfect
+            match.
           </p>
           <Link
             href="/profile"
@@ -85,7 +101,8 @@ export default function Home() {
           </div>
           <h2 className="text-2xl font-bold mb-4 text-pink-600">Discover</h2>
           <p className="text-gray-600 mb-6">
-            Browse profiles and find your perfect match using our advanced search features.
+            Browse profiles and find your perfect match using our advanced
+            search features.
           </p>
           <Link
             href="/discover"
@@ -98,7 +115,9 @@ export default function Home() {
       </main>
 
       <section className="container mx-auto mt-16 text-center">
-        <h2 className="text-3xl font-bold text-pink-600 mb-6">Why Choose MatchMe?</h2>
+        <h2 className="text-3xl font-bold text-pink-600 mb-6">
+          Why Choose MatchMe?
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-xl shadow-md">
             <Image
@@ -109,7 +128,9 @@ export default function Home() {
               className="mx-auto mb-4"
             />
             <h3 className="text-xl font-semibold mb-2">Safe and Secure</h3>
-            <p className="text-gray-600">Your safety is our top priority. Enjoy a secure dating experience.</p>
+            <p className="text-gray-600">
+              Your safety is our top priority. Enjoy a secure dating experience.
+            </p>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-md">
             <Image
@@ -120,7 +141,10 @@ export default function Home() {
               className="mx-auto mb-4"
             />
             <h3 className="text-xl font-semibold mb-2">Smart Matching</h3>
-            <p className="text-gray-600">Our algorithm ensures you meet people who truly match your preferences.</p>
+            <p className="text-gray-600">
+              Our algorithm ensures you meet people who truly match your
+              preferences.
+            </p>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-md">
             <Image
@@ -131,11 +155,12 @@ export default function Home() {
               className="mx-auto mb-4"
             />
             <h3 className="text-xl font-semibold mb-2">Vibrant Community</h3>
-            <p className="text-gray-600">Join a diverse and active community of singles ready to mingle.</p>
+            <p className="text-gray-600">
+              Join a diverse and active community of singles ready to mingle.
+            </p>
           </div>
         </div>
       </section>
     </div>
-  )
+  );
 }
-
