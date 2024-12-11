@@ -28,4 +28,7 @@ export const MemberEditSchema = z.object({
   name: z.string().min(3, { message: "Name must be at least 3 characters" }),
   bio: z.string(),
   country: z.string().min(1, {message : "Country is required"}),
+  interests: z
+  .array(z.string())
+  .min(1, { message: "Select at least one interest" }),
 });
