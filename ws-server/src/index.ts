@@ -1,85 +1,174 @@
-import WebSocket from "ws";
+import type { WebSocket } from "ws";
 import { WebSocketServer } from "ws";
-import { User } from "./userManager";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { NEXTAUTH_SECRET } from "./config";
 
 const wss = new WebSocketServer({ port: 8080 });
-const users = new Map<string, User>();
 
-wss.on("connection", (socket: WebSocket) => {
-  let currentUser: User | null = null;
+const authorizeUser = (token: string): string | null => {
+  try {
+    const isVerified = jwt.verify(token, NEXTAUTH_SECRET!) as JwtPayload;
+    if (isVerified) {
+      return isVerified.userId;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("malformed token or not verified");
+    return null;
+  }
+};
 
-  const onlineUsers = [...users].filter(([id, user]) => user.isOnline);
+const users = new Map<string, WebSocket>();
 
-  socket.send(
+function joinChat(userId: string) {
+  const onlineUsers = Array.from(users.keys());
+
+  users.forEach((socket) => {
+    socket.send(
+      JSON.stringify({
+        type: "USER_JOINED",
+        userId,
+        onlineUsers: onlineUsers,
+      })
+    );
+  });
+}
+
+function chatOthers(data: any, senderId: string) {
+  const receiverId = data.receiverId;
+
+  if (!receiverId || !data.message) {
+    console.warn("Invalid message format");
+    return;
+  }
+
+  const receiverSocket = users.get(receiverId);
+
+  if (!receiverSocket) {
+    console.log(
+      "User is offline, fallback to HTTP or DB queue to store message"
+    );
+    return;
+  }
+
+  receiverSocket.send(
     JSON.stringify({
-      type: "ONLINE_USERS",
-      users: onlineUsers,
+      type: "SEND_MESSAGE",
+      message: data.message,
+      senderId: senderId,
+      time: data.sentAt || new Date().toISOString(),
     })
   );
+}
+
+function handleTyping(data: any, senderId: string) {
+  const { receiverId, isTyping } = data;
+
+  if (!receiverId || !isTyping || typeof isTyping !== "boolean") {
+    return;
+  }
+
+  const receiverSocket = users.get(receiverId);
+
+  if (!receiverSocket) return;
+
+  receiverSocket.send(
+    JSON.stringify({
+      type: "TYPING",
+      senderId: senderId,
+      isTyping,
+    })
+  );
+}
+
+function handleReadReceipt(data: any, senderId: string) {
+  const { receiverId, messageId } = data;
+
+  if (!receiverId || !messageId) {
+    return;
+  }
+
+  const receiverSocket = users.get(receiverId);
+
+  if (!receiverSocket) return;
+
+  receiverSocket.send(
+    JSON.stringify({
+      type: "READ_RECEIPT",
+      senderId: senderId,
+      messageId,
+      readAt: new Date().toISOString(),
+    })
+  );
+}
+
+const leaveChat = (userId: string) => {
+  users.delete(userId);
+
+  const onlineUsers = Array.from(users.keys());
+
+  users.forEach((socket) => {
+    socket.send(
+      JSON.stringify({
+        type: "USER_LEFT",
+        userId,
+        onlineUsers,
+      })
+    );
+  });
+};
+
+wss.on("connection", (socket: WebSocket, request) => {
+  const url = request.url;
+
+  const token = url?.split("?token=")[1];
+
+  if (!token) {
+    console.error("no token found!");
+    return;
+  }
+
+  const userId = authorizeUser(token);
+
+  if (!userId) {
+    console.log("error authorizing user");
+    socket.close();
+    return;
+  }
+
+  if (users.has(userId)) {
+    users.get(userId)?.close();
+  }
+  users.set(userId, socket);
 
   socket.on("message", (data) => {
-    const msg = JSON.parse(data.toString());
+    const parsedData = JSON.parse(data.toString());
 
-    switch (msg.type) {
-      case "ONLINE": {
-        const userId = msg.userId;
-        if (!users.has(userId)) {
-          const newUser = new User(userId);
-          users.set(userId, newUser);
-        }
-
-        currentUser = users.get(userId)!;
-        currentUser.setSocket(socket);
-
-        users.forEach((user, id) => {
-          if (id !== userId) {
-            user.handleOnlineStatus({ userId, status: "online" });
-          }
-        });
-
+    switch (parsedData.type) {
+      case "JOIN":
+        joinChat(userId);
         break;
-      }
-
-      case "SEND_MESSAGE": {
-        const { chatId, senderId, message, recieverId } = msg;
-
-        const reciever = users.get(recieverId);
-        if (reciever) {
-          reciever.sendMessage(chatId, senderId, message);
-        } else {
-          socket.send(
-            JSON.stringify({
-              type: "USER_OFFLINE",
-              message: `User ${recieverId} is offline. Message will be delivered once they are online.`,
-            })
-          );
-        }
+      case "CHAT":
+        chatOthers(parsedData, userId);
         break;
-      }
+      case "TYPING":
+        handleTyping(parsedData, userId);
+        break;
+      case "READ_RECEIPT":
+        handleReadReceipt(parsedData, userId);
+        break;
     }
   });
 
   socket.on("close", () => {
-    if (currentUser) {
-      currentUser.handleDisconnect();
-
-      users.forEach((user, id) => {
-        if (id !== currentUser?.userId) {
-          user.handleOnlineStatus({
-            userId: currentUser?.userId,
-            status: "offline",
-          });
-        }
-      });
-      users.delete(currentUser.userId);
-
-      console.log(`User ${currentUser.userId} disconnected`);
-    }
+    leaveChat(userId);
   });
 
   socket.on("error", (err) => {
     console.error("WebSocket error:", err);
   });
+
+  console.log("WebSocket server is running on ws://localhost:8080");
 });
 
-console.log("WebSocket server is running on ws://localhost:8080");
