@@ -3,6 +3,7 @@ import { NextAuthOptions, Session, User as NextAuthUser } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "./db";
 import { JWT } from "next-auth/jwt";
+import { sign } from "jsonwebtoken";
 
 
 interface CustomSession extends Session {
@@ -10,6 +11,7 @@ interface CustomSession extends Session {
       id: string;
       username: string;
       image : string;
+      accessToken : string;
     };
   }
   
@@ -17,6 +19,7 @@ interface CustomSession extends Session {
     id: string;
     username: string;
     image: string;
+    accessToken : string;
   }
 
 export const authOptions: NextAuthOptions = {
@@ -58,11 +61,17 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid password");
         }
 
+        const accessToken = sign({
+          userId : user.id
+        }, process.env.NEXTAUTH_SECRET!);
+
+
         return {
           id: user.id.toString(),
           username: user.username,
           name: user.name,
-          image: user.profilePicture
+          image: user.profilePicture,
+          accessToken
         };
       },
     }),
@@ -76,6 +85,7 @@ export const authOptions: NextAuthOptions = {
         token.id = (user as CustomUser).id;
         token.username = (user as CustomUser).username;
         token.image = (user as CustomUser).image;
+        token.accessToken = (user as CustomUser).accessToken;
       }
       return token;
     },
@@ -85,6 +95,7 @@ export const authOptions: NextAuthOptions = {
           id: token.id as string,
           username: token.username as string,
           image : token.image as string,
+          accessToken: token.accessToken as string,
         };
       }
       return session;

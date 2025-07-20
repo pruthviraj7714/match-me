@@ -13,11 +13,11 @@ export default async function ListPage() {
         <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="likedByMe" className="text-lg">
             <Heart className="w-5 h-5 mr-2" />
-            Members I Have Liked
+            Members I have liked
           </TabsTrigger>
           <TabsTrigger value="likers" className="text-lg">
             <Heart className="w-5 h-5 mr-2" />
-            Members that Like Me
+            Members who liked me
           </TabsTrigger>
         </TabsList>
         <TabsContent value="likedByMe">

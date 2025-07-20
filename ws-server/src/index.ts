@@ -36,9 +36,12 @@ function joinChat(userId: string) {
 }
 
 function chatOthers(data: any, senderId: string) {
-  const receiverId = data.receiverId;
+  const {
+    receiverId,
+    message: { content },
+  } = data;
 
-  if (!receiverId || !data.message) {
+  if (!receiverId || !content) {
     console.warn("Invalid message format");
     return;
   }
@@ -55,21 +58,22 @@ function chatOthers(data: any, senderId: string) {
   receiverSocket.send(
     JSON.stringify({
       type: "SEND_MESSAGE",
-      message: data.message,
+      message: content,
       senderId: senderId,
+      chatId: data.chatId,
       time: data.sentAt || new Date().toISOString(),
     })
   );
 }
 
 function handleTyping(data: any, senderId: string) {
-  const { receiverId, isTyping } = data;
+  const { recieverId, isTyping, chatId } = data;
 
-  if (!receiverId || !isTyping || typeof isTyping !== "boolean") {
+  if (!recieverId || !isTyping || typeof isTyping !== "boolean") {
     return;
   }
 
-  const receiverSocket = users.get(receiverId);
+  const receiverSocket = users.get(recieverId);
 
   if (!receiverSocket) return;
 
@@ -77,28 +81,9 @@ function handleTyping(data: any, senderId: string) {
     JSON.stringify({
       type: "TYPING",
       senderId: senderId,
+      recieverId,
+      chatId,
       isTyping,
-    })
-  );
-}
-
-function handleReadReceipt(data: any, senderId: string) {
-  const { receiverId, messageId } = data;
-
-  if (!receiverId || !messageId) {
-    return;
-  }
-
-  const receiverSocket = users.get(receiverId);
-
-  if (!receiverSocket) return;
-
-  receiverSocket.send(
-    JSON.stringify({
-      type: "READ_RECEIPT",
-      senderId: senderId,
-      messageId,
-      readAt: new Date().toISOString(),
     })
   );
 }
@@ -145,6 +130,9 @@ wss.on("connection", (socket: WebSocket, request) => {
   socket.on("message", (data) => {
     const parsedData = JSON.parse(data.toString());
 
+    console.log(parsedData);
+    
+
     switch (parsedData.type) {
       case "JOIN":
         joinChat(userId);
@@ -154,9 +142,6 @@ wss.on("connection", (socket: WebSocket, request) => {
         break;
       case "TYPING":
         handleTyping(parsedData, userId);
-        break;
-      case "READ_RECEIPT":
-        handleReadReceipt(parsedData, userId);
         break;
     }
   });
@@ -171,4 +156,3 @@ wss.on("connection", (socket: WebSocket, request) => {
 
   console.log("WebSocket server is running on ws://localhost:8080");
 });
-

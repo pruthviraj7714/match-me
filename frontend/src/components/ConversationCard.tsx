@@ -4,7 +4,6 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { ChatProps, MessageProps } from "@/types/chat.types";
 
-
 const ConversationCard = ({
   conversation,
   recipientUser,
@@ -20,7 +19,8 @@ const ConversationCard = ({
   const lastMessage = conversation?.messages[conversation.messages.length - 1];
 
   const unreadMessages = conversation.messages.filter(
-    (message : MessageProps) => message.isRead === false
+    (message: MessageProps) =>
+      message.senderId === recipientUser && message.isRead === false
   );
 
   return (
@@ -45,7 +45,9 @@ const ConversationCard = ({
               {recipientInfo.name}
             </h3>
             <p className="text-sm text-gray-500 truncate">
-              {lastMessage?.content || "Start Conversation 💝"}
+              {lastMessage?.content && lastMessage.senderId !== recipientUser
+                ? `You: ${lastMessage.content}`
+                : lastMessage?.content || "Start Conversation 💝"}
             </p>
           </div>
           <div className="flex flex-col items-end space-y-1">
@@ -61,11 +63,13 @@ const ConversationCard = ({
                 <MessageCircle size={14} className="text-white" />
               </span>
             ) : (
-              <span className="inline-flex items-center justify-center w-6 h-6 bg-primary rounded-full">
-                <span className="text-white font-mono text-sm">
-                  {unreadMessages?.length}
+              unreadMessages.length > 0 && (
+                <span className="inline-flex items-center justify-center w-6 h-6 bg-primary rounded-full">
+                  <span className="text-white font-mono text-sm">
+                    {unreadMessages?.length}
+                  </span>
                 </span>
-              </span>
+              )
             )}
           </div>
         </div>

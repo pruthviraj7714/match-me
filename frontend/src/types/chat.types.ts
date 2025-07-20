@@ -19,3 +19,11 @@ export interface ChatProps {
   user1: UserProps;
   user2: UserProps;
 }
+
+
+
+export type MessageTypes = "CHAT";
+export type TypingIndicatorTypes = "TYPING";
+export type ReadReceipt = "READ_RECEIPT";
+export type JoinRoomTypes = "JOIN";
+

@@ -28,3 +28,23 @@ export const fetchPrevMessages = async ({chatId} : {chatId : string})  => {
         throw new Error("Internal Server Error");
     }
 }
+
+export const fetchParticipants = async ({chatId} : {chatId : string})  => {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user) {
+        throw new Error("User not found!");
+      }
+    
+    try {
+        const chatInfo = await prisma.chat.findFirst({
+            where : {
+                id : chatId
+            },
+        })
+
+        return chatInfo;
+    } catch (error) {
+        throw new Error("Internal Server Error");
+    }
+}
